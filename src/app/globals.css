@@ -1,0 +1,98 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    @apply w-full h-full;
+  }
+  
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+  
+  #__next, [data-nextjs-scroll-focus-boundary] {
+    @apply w-full h-full;
+  }
+}
+
+@layer utilities {
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  
+  /* Responsive table wrapper */
+  .table-responsive {
+    @apply overflow-x-auto -mx-3 sm:mx-0;
+  }
+  
+  .table-responsive table {
+    @apply min-w-full;
+  }
+  
+  /* Touch-friendly minimum sizes */
+  @media (max-width: 640px) {
+    button, a, input, select, textarea {
+      min-height: 44px; /* iOS recommended touch target */
+    }
+  }
+  
+  /* Safe area support for mobile devices with notches */
+  @supports (padding: max(0px)) {
+    .safe-area-top {
+      padding-top: max(0px, env(safe-area-inset-top));
+    }
+    
+    .safe-area-bottom {
+      padding-bottom: max(0px, env(safe-area-inset-bottom));
+    }
+  }
+}
+
+/* React Big Calendar Custom Styles */
+.rbc-calendar {
+  @apply bg-white rounded-lg;
+}
+
+.rbc-header {
+  @apply border-b border-gray-200 py-2 text-sm font-medium text-gray-700;
+}
+
+.rbc-today {
+  @apply bg-emerald-50;
+}
+
+.rbc-off-range-bg {
+  @apply bg-gray-50;
+}
+
+.rbc-event {
+  @apply rounded px-2 py-1 text-xs font-medium cursor-pointer transition-all;
+}
+
+.rbc-event:hover {
+  @apply shadow-md transform scale-105;
+}
+
+.rbc-selected {
+  @apply ring-2 ring-emerald-500;
+}
+
+.rbc-time-slot {
+  @apply border-t border-gray-100;
+}
+
+.rbc-time-header-content {
+  @apply border-l border-gray-200;
+}
+
+.rbc-day-slot .rbc-time-slot {
+  @apply border-t border-gray-100;
+}
+
+.rbc-current-time-indicator {
+  @apply bg-emerald-600;
+}
