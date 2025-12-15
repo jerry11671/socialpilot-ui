@@ -166,10 +166,10 @@ export default function LandingPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
             <div>
               <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-6">
-                Why Choose SocialPilot?
+                Why Choose You Fit Run Am?
               </h2>
               <p className="text-lg text-gray-600 mb-8">
-                Join thousands of businesses and creators who trust SocialPilot 
+                Join thousands of businesses and creators who trust You Fit Run Am 
                 to manage their social media presence efficiently.
               </p>
               <div className="space-y-4">
@@ -242,7 +242,7 @@ export default function LandingPage() {
             Ready to Transform Your Social Media?
           </h2>
           <p className="text-xl text-emerald-100 mb-8">
-            Start your free trial today and experience the power of SocialPilot
+            Start your free trial today and experience the power of You Fit Run Am
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">
@@ -299,7 +299,7 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
-            <p>&copy; {new Date().getFullYear()} SocialPilot. All rights reserved.</p>
+            <p>&copy; {new Date().getFullYear()} You Fit Run Am. All rights reserved.</p>
           </div>
       </div>
       </footer>

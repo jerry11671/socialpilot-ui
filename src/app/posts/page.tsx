@@ -16,7 +16,7 @@ export default function PostsPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
-              <Link href="/" className="text-2xl font-bold text-gray-900">SocialPilot</Link>
+              <Link href="/" className="text-2xl font-bold text-gray-900">You Fit Run Am</Link>
             </div>
             <nav className="flex space-x-8">
               <Link href="/" className="text-gray-500 hover:text-gray-700">Dashboard</Link>

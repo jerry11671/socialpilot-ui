@@ -23,7 +23,7 @@ export default function ListeningPage() {
     keywords: [
       {
         keywordId: '1',
-        keyword: 'SocialPilot',
+        keyword: 'You Fit Run Am',
         totalMentions: 45,
         avgEngagement: 12.5,
         trend: 15.3,
@@ -61,7 +61,7 @@ export default function ListeningPage() {
   const mentions = [
     {
       id: '1',
-      content: 'Just started using SocialPilot and loving the interface! Great tool for managing multiple accounts.',
+      content: 'Just started using You Fit Run Am and loving the interface! Great tool for managing multiple accounts.',
       author: 'Sarah Johnson',
       platform: 'Twitter',
       sentiment: 'positive',
@@ -81,7 +81,7 @@ export default function ListeningPage() {
     },
     {
       id: '3',
-      content: 'SocialPilot vs other tools - what do you think is the best for small businesses?',
+      content: 'You Fit Run Am vs other tools - what do you think is the best for small businesses?',
       author: 'Emma Davis',
       platform: 'LinkedIn',
       sentiment: 'neutral',

@@ -116,7 +116,7 @@ export default function Navigation() {
   return (
     <div className="w-64 bg-white shadow-sm border-r flex flex-col">
       <div className="p-6">
-        <h1 className="text-2xl font-bold text-gray-900">SocialPilot</h1>
+        <h1 className="text-2xl font-bold text-gray-900">You Fit Run Am</h1>
       </div>
       
       <nav className="flex-1 px-4 space-y-1 overflow-y-auto">

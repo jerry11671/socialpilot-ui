@@ -22,11 +22,13 @@ export default function SignupPage() {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [success, setSuccess] = useState('')
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
+    setSuccess('')
 
     // Basic validation
     if (formData.password !== formData.confirmPassword) {
@@ -41,16 +43,51 @@ export default function SignupPage() {
       return
     }
 
-    // Mock signup - in real app this would call an API
-    setTimeout(() => {
-      if (formData.email && formData.password && formData.first_name && formData.last_name) {
-        // Simulate successful signup
-        router.push('/dashboard')
-      } else {
-        setError('Please fill in all required fields')
+    try {
+      const response = await fetch(
+        'https://socialpilot-evimero-backend.onrender.com/api/v1/auths/users/register',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            first_name: formData.first_name,
+            last_name: formData.last_name,
+            email: formData.email,
+            password: formData.password,
+            phone: formData.phone,
+          }),
+        }
+      )
+
+      const result = await response.json().catch(() => null)
+
+      const statusCode = result?.status_code ?? response.status
+      const message =
+        result?.message || (response.ok ? 'Registration successful.' : 'Registration failed.')
+
+      if (!response.ok || statusCode >= 400) {
+        setError(message)
+        return
       }
+
+      // Mark user as authenticated for client-side guards
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('yf_auth', 'true')
+      }
+
+      setSuccess(message)
+
+      // Optionally redirect after a short delay – for now go to login
+      setTimeout(() => {
+        router.push('/login')
+      }, 1000)
+    } catch (err) {
+      setError('Network error. Please check your connection and try again.')
+    } finally {
       setIsLoading(false)
-    }, 1000)
+    }
   }
 
   const handleOAuthSignIn = async (provider: 'google' | 'microsoft') => {
@@ -97,6 +134,11 @@ export default function SignupPage() {
             {error && (
               <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
                 {error}
+              </div>
+            )}
+            {success && !error && (
+              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+                {success}
               </div>
             )}
 

@@ -24,7 +24,10 @@ export default function LoginPage() {
     // Mock login - in real app this would call an API
     setTimeout(() => {
       if (email && password) {
-        // Simulate successful login
+        // Simulate successful login by marking auth flag
+        if (typeof window !== 'undefined') {
+          window.localStorage.setItem('yf_auth', 'true')
+        }
         router.push('/dashboard')
       } else {
         setError('Please enter both email and password')

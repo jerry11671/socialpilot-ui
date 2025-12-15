@@ -27,7 +27,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
       {/* Sidebar */}
       <div className="w-64 bg-white shadow-sm border-r">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-gray-900">SocialPilot</h1>
+          <h1 className="text-2xl font-bold text-gray-900">You Fit Run Am</h1>
         </div>
         <nav className="px-4 space-y-1">
           {navigation.map((item) => (
