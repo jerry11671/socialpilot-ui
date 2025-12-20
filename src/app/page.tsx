@@ -1,5 +1,6 @@
 'use client'
 
+import { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import Logo from '@/components/Logo'
@@ -17,10 +18,31 @@ import {
   Shield,
   Globe,
   Image as ImageIcon,
-  Workflow
+  Workflow,
+  Menu
 } from 'lucide-react'
 
 export default function LandingPage() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close menu when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        setMobileMenuOpen(false)
+      }
+    }
+
+    if (mobileMenuOpen) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside)
+    }
+  }, [mobileMenuOpen])
+
   const features = [
     {
       icon: Sparkles,
@@ -77,10 +99,15 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <Logo size="lg" showText={true} />
-            <div className="flex items-center space-x-4">
+        <div className="w-full pl-0 pr-[10px] sm:max-w-7xl sm:mx-auto sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20 sm:h-24 lg:h-28">
+            <div className="flex items-center">
+              <Logo size="md" showText={true} className="sm:hidden" />
+              <Logo size="lg" showText={true} className="hidden sm:block" />
+            </div>
+            
+            {/* Desktop buttons */}
+            <div className="hidden sm:flex items-center space-x-4">
               <Link href="/login">
                 <Button variant="ghost" className="text-gray-700 hover:text-gray-900">
                   Sign In
@@ -92,6 +119,34 @@ export default function LandingPage() {
                   <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </Link>
+            </div>
+
+            {/* Mobile menu button and dropdown */}
+            <div className="relative sm:hidden" ref={menuRef}>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              >
+                <Menu className="h-6 w-6" />
+              </Button>
+              
+              {/* Dropdown Menu */}
+              {mobileMenuOpen && (
+                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
+                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                      Sign In
+                    </button>
+                  </Link>
+                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full text-left px-4 py-3 text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center justify-between">
+                      Get Started
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </div>

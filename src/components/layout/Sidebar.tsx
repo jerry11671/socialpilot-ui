@@ -95,7 +95,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <div className="flex h-full w-full flex-col bg-white border-r border-gray-200">
       {/* Logo */}
-      <div className="flex h-14 sm:h-16 items-center border-b border-gray-200 px-3 sm:px-4 lg:px-6 flex-shrink-0">
+      <div className="flex h-16 sm:h-24 items-center border-b border-gray-200 px-3 sm:px-4 lg:px-6 flex-shrink-0">
         <Logo size="sm" showText={true} className="sm:hidden" />
         <Logo size="md" showText={true} className="hidden sm:block" />
       </div>
