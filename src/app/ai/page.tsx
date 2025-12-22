@@ -3,12 +3,18 @@
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton'
 import { FileText, Image as ImageIcon, Hash, Video, Lightbulb, Target, Shuffle, Brain, Sparkles, Wand2 } from 'lucide-react'
 import { useState } from 'react'
 
 export default function AIPage() {
   const [generatedContent, setGeneratedContent] = useState<string>('')
   const [isGenerating, setIsGenerating] = useState(false)
+  
+  // Input states for voice input support
+  const [captionInput, setCaptionInput] = useState('')
+  const [hashtagInput, setHashtagInput] = useState('')
+  const [ideasInput, setIdeasInput] = useState('')
 
   const handleGenerate = (type: string) => {
     setIsGenerating(true)
@@ -91,10 +97,20 @@ export default function AIPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     What's your post about?
                   </label>
-                  <textarea
-                    placeholder="Describe your post content, product, or message..."
-                    className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={captionInput}
+                      onChange={(e) => setCaptionInput(e.target.value)}
+                      placeholder="Describe your post content, product, or message... or use voice input"
+                      className="w-full h-24 p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                    />
+                    <div className="absolute bottom-3 right-3">
+                      <VoiceInputButton
+                        onTranscript={(text) => setCaptionInput((prev) => prev ? `${prev} ${text}` : text)}
+                        size="md"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -206,10 +222,20 @@ export default function AIPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Post content or keywords
                   </label>
-                  <textarea
-                    placeholder="Enter your post content or relevant keywords..."
-                    className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={hashtagInput}
+                      onChange={(e) => setHashtagInput(e.target.value)}
+                      placeholder="Enter your post content or relevant keywords... or use voice input"
+                      className="w-full h-24 p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                    />
+                    <div className="absolute bottom-3 right-3">
+                      <VoiceInputButton
+                        onTranscript={(text) => setHashtagInput((prev) => prev ? `${prev} ${text}` : text)}
+                        size="md"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Industry</label>
@@ -309,10 +335,20 @@ export default function AIPage() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Tell us about your business
                   </label>
-                  <textarea
-                    placeholder="Describe your business, target audience, and goals..."
-                    className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                  />
+                  <div className="relative">
+                    <textarea
+                      value={ideasInput}
+                      onChange={(e) => setIdeasInput(e.target.value)}
+                      placeholder="Describe your business, target audience, and goals... or use voice input"
+                      className="w-full h-24 p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                    />
+                    <div className="absolute bottom-3 right-3">
+                      <VoiceInputButton
+                        onTranscript={(text) => setIdeasInput((prev) => prev ? `${prev} ${text}` : text)}
+                        size="md"
+                      />
+                    </div>
+                  </div>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">Content Type</label>

@@ -11,19 +11,19 @@ interface LogoProps {
 
 export default function Logo({ size = 'md', showText = true, className }: LogoProps) {
   const sizeClasses = {
-    sm: 'h-12',
-    md: 'h-20',
-    lg: 'h-24'
+    sm: 'h-10',
+    md: 'h-16',
+    lg: 'h-20'
   }
 
   return (
-    <div className={cn('flex items-center m-0 p-0', className)}>
+    <div className={cn('flex items-center', className)}>
       <Image
         src="/logo.png"
         alt="You Fit Run Am"
-        width={size === 'sm' ? 180 : size === 'md' ? 280 : 360}
-        height={size === 'sm' ? 48 : size === 'md' ? 80 : 96}
-        className={cn('object-contain m-0 p-0', sizeClasses[size])}
+        width={size === 'sm' ? 150 : size === 'md' ? 200 : 250}
+        height={size === 'sm' ? 40 : size === 'md' ? 64 : 80}
+        className={cn('object-contain', sizeClasses[size])}
         priority
       />
     </div>

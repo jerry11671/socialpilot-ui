@@ -24,6 +24,7 @@ import {
   GitBranch,
   Repeat,
   Link2,
+  Building2,
 } from 'lucide-react'
 
 const navigation = [
@@ -39,6 +40,7 @@ const navigation = [
   { name: 'Media Library', href: '/media', icon: ImageIcon },
   { name: 'Competitors', href: '/competitors', icon: TrendingUp },
   { name: 'Advocacy', href: '/advocacy', icon: Share2 },
+  { name: 'Organizations', href: '/organizations', icon: Building2 },
   { name: 'Team', href: '/team', icon: Users },
   { name: 'Workflows', href: '/workflows', icon: GitBranch },
   { name: 'Accounts', href: '/accounts', icon: Link2 },
@@ -95,7 +97,7 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
   return (
     <div className="flex h-full w-full flex-col bg-white border-r border-gray-200">
       {/* Logo */}
-      <div className="flex h-16 sm:h-24 items-center border-b border-gray-200 px-3 sm:px-4 lg:px-6 flex-shrink-0">
+      <div className="flex h-16 sm:h-20 items-center border-b border-gray-200 px-3 sm:px-4 lg:px-6 flex-shrink-0">
         <Logo size="sm" showText={true} className="sm:hidden" />
         <Logo size="md" showText={true} className="hidden sm:block" />
       </div>

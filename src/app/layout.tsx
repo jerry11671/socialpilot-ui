@@ -1,10 +1,9 @@
 'use client'
 
-import type { Metadata } from 'next'
-import { Inter } from 'next/font/google'
-import './globals.css'
 import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
+import { Inter } from 'next/font/google'
+import './globals.css'
 import Sidebar from '@/components/layout/Sidebar'
 import Header from '@/components/layout/Header'
 import { Sheet, SheetContent } from '@/components/ui/sheet'
@@ -22,13 +21,13 @@ export default function RootLayout({
   const pathname = usePathname()
   const router = useRouter()
 
-  // Pages that are publicly accessible
-  const publicPages = ['/', '/login', '/signup']
+  // Pages that are publicly accessible (no login required)
+  const publicPages = ['/', '/login', '/signup', '/forgot-password']
   const isPublicPage = publicPages.includes(pathname || '')
 
   // Simple client-side auth guard:
   // - For non-public pages, require a flag in localStorage
-  // - If missing, redirect to signup
+  // - If missing, redirect to login
   useEffect(() => {
     if (typeof window === 'undefined') return
 
@@ -40,7 +39,7 @@ export default function RootLayout({
     const hasAuth = window.localStorage.getItem('yf_auth') === 'true'
 
     if (!hasAuth) {
-      router.replace('/signup')
+      router.replace('/login')
     } else {
       setIsAuthChecked(true)
     }
@@ -51,7 +50,7 @@ export default function RootLayout({
       <body className={inter.className}>
         <ErrorBoundary>
           {isPublicPage ? (
-            // Public pages (landing, login, signup) - no sidebar/header
+            // Public pages (landing, login, signup, forgot-password) - no sidebar/header
             <div className="min-h-screen w-full">
               {children}
             </div>

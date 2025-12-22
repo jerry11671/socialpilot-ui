@@ -1,12 +1,18 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Mail, Lock, ArrowRight, Loader2, Eye, EyeOff } from 'lucide-react'
 import Link from 'next/link'
 import Logo from '@/components/Logo'
+
+// API Configuration
+const BASE_URL = 'https://socialpilot-evimero-backend.onrender.com/api/v1'
+const LOGIN_URL = `${BASE_URL}/auths/users/login`
+const GOOGLE_CLIENT_ID = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || ''
+const BACKEND_OAUTH_URL = `${BASE_URL}/auths/users/oauth?provider=google`
 
 export default function LoginPage() {
   const router = useRouter()
@@ -15,35 +21,246 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState('')
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false)
+
+  // Load Google Identity Services script on mount
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    
+    // Check if script is already loaded
+    if ((window as any).google?.accounts) {
+      setGoogleScriptLoaded(true)
+      return
+    }
+
+    const script = document.createElement('script')
+    script.src = 'https://accounts.google.com/gsi/client'
+    script.async = true
+    script.defer = true
+    script.onload = () => {
+      setGoogleScriptLoaded(true)
+      console.log('Google Identity Services loaded')
+    }
+    script.onerror = () => {
+      console.error('Failed to load Google Identity Services')
+    }
+    document.head.appendChild(script)
+
+    return () => {
+      // Cleanup if needed
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
     setError('')
 
-    // Mock login - in real app this would call an API
-    setTimeout(() => {
-      if (email && password) {
-        // Simulate successful login by marking auth flag
+    if (!email || !password) {
+      setError('Please enter both email and password')
+      setIsLoading(false)
+      return
+    }
+
+    try {
+      const response = await fetch(LOGIN_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email,
+          password: password,
+        }),
+      })
+
+      const result = await response.json().catch(() => ({}))
+      
+      // Check if response is successful (status 200-299)
+      if (response.ok) {
+        // Success - mark user as authenticated and store tokens
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('yf_auth', 'true')
+          
+          // Store access token if provided
+          if (result?.access_token || result?.token) {
+            window.localStorage.setItem('access_token', result.access_token || result.token)
+          }
+          
+          // Store refresh token if provided
+          if (result?.refresh_token) {
+            window.localStorage.setItem('refresh_token', result.refresh_token)
+          }
+
+          // Store user data if provided
+          if (result?.user) {
+            window.localStorage.setItem('user', JSON.stringify(result.user))
+          }
         }
+
+        // Redirect to dashboard on successful login
         router.push('/dashboard')
-      } else {
-        setError('Please enter both email and password')
+        return
       }
+
+      // Handle error responses (status 400+)
+      const errorMessage = result?.message || result?.error || result?.detail || 'Login failed. Please check your credentials.'
+      setError(errorMessage)
       setIsLoading(false)
-    }, 1000)
+    } catch (err) {
+      console.error('Login error:', err)
+      setError('Network error. Please check your connection and try again.')
+      setIsLoading(false)
+    }
+  }
+
+  // Function to send the Google token to your backend
+  const sendTokenToBackend = async (token: string) => {
+    try {
+      console.log('Sending token to backend...')
+      
+      const response = await fetch(BACKEND_OAUTH_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          provider: 'google',
+          token: token,
+        }),
+      })
+
+      const result = await response.json().catch(() => null)
+      
+      console.log('Backend response:', result)
+
+      if (!response.ok) {
+        const errorMessage = result?.message || 'Authentication failed'
+        console.error('Backend error:', errorMessage)
+        setError(errorMessage)
+        setIsLoading(false)
+        return
+      }
+
+      // Success - mark user as authenticated and redirect
+      console.log('Authentication successful!')
+      if (typeof window !== 'undefined') {
+        window.localStorage.setItem('yf_auth', 'true')
+        // Store any tokens from the backend response if provided
+        if (result?.access_token) {
+          window.localStorage.setItem('access_token', result.access_token)
+        }
+        if (result?.refresh_token) {
+          window.localStorage.setItem('refresh_token', result.refresh_token)
+        }
+      }
+      
+      router.push('/dashboard')
+    } catch (err) {
+      console.error('Network error:', err)
+      setError('Network error. Please check your connection and try again.')
+      setIsLoading(false)
+    }
+  }
+
+  // Handle Google Sign-In button click
+  const handleGoogleSignIn = () => {
+    setIsLoading(true)
+    setError('')
+
+    if (!googleScriptLoaded || !(window as any).google?.accounts) {
+      setError('Google Sign-In is still loading. Please try again.')
+      setIsLoading(false)
+      return
+    }
+
+    const google = (window as any).google
+
+    // Check if we have a client ID configured
+    if (!GOOGLE_CLIENT_ID) {
+      // Fallback: Use OAuth 2.0 implicit flow with popup
+      const oauth2Client = google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'openid email profile',
+        callback: async (tokenResponse: any) => {
+          if (tokenResponse.error) {
+            console.error('Google OAuth error:', tokenResponse.error)
+            setError('Google sign-in failed. Please try again.')
+            setIsLoading(false)
+            return
+          }
+
+          if (tokenResponse.access_token) {
+            console.log('Got access token from Google')
+            // Send the access token to your backend
+            await sendTokenToBackend(tokenResponse.access_token)
+          }
+        },
+      })
+
+      oauth2Client.requestAccessToken({ prompt: 'select_account' })
+      return
+    }
+
+    // Primary method: Use Google Identity Services for ID token
+    google.accounts.id.initialize({
+      client_id: GOOGLE_CLIENT_ID,
+      callback: async (response: any) => {
+        if (response.credential) {
+          console.log('Got ID token from Google')
+          // Send the ID token (credential) to your backend
+          await sendTokenToBackend(response.credential)
+        } else {
+          console.error('No credential received from Google')
+          setError('Failed to get credentials from Google.')
+          setIsLoading(false)
+        }
+      },
+    })
+
+    // Show the Google One Tap or popup
+    google.accounts.id.prompt((notification: any) => {
+      if (notification.isNotDisplayed()) {
+        console.log('One Tap not displayed, using popup flow')
+        // Fallback to OAuth 2.0 popup if One Tap is not available
+        const oauth2Client = google.accounts.oauth2.initTokenClient({
+          client_id: GOOGLE_CLIENT_ID,
+          scope: 'openid email profile',
+          callback: async (tokenResponse: any) => {
+            if (tokenResponse.error) {
+              console.error('Google OAuth error:', tokenResponse.error)
+              setError('Google sign-in was cancelled or failed.')
+              setIsLoading(false)
+              return
+            }
+
+            if (tokenResponse.access_token) {
+              console.log('Got access token from Google popup')
+              await sendTokenToBackend(tokenResponse.access_token)
+            }
+          },
+        })
+
+        oauth2Client.requestAccessToken({ prompt: 'select_account' })
+      } else if (notification.isSkippedMoment()) {
+        console.log('One Tap skipped by user')
+        setIsLoading(false)
+      } else if (notification.isDismissedMoment()) {
+        console.log('One Tap dismissed')
+        setIsLoading(false)
+      }
+    })
   }
 
   const handleOAuthSignIn = async (provider: 'google' | 'microsoft') => {
-    setIsLoading(true)
-    setError('')
-    
-    // Mock OAuth - in real app this would redirect to OAuth provider
-    setTimeout(() => {
-      router.push('/dashboard')
-    }, 1000)
+    if (provider === 'google') {
+      handleGoogleSignIn()
+    } else {
+      // Microsoft OAuth - to be implemented
+      setIsLoading(true)
+      setError('Microsoft sign-in coming soon')
+      setIsLoading(false)
+    }
   }
 
   return (

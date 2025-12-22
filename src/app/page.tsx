@@ -14,34 +14,26 @@ import {
   TrendingUp,
   CheckCircle2,
   ArrowRight,
-  Zap,
-  Shield,
-  Globe,
-  Image as ImageIcon,
-  Workflow,
-  Menu
+  Menu,
+  X
 } from 'lucide-react'
 
 export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const menuRef = useRef<HTMLDivElement>(null)
 
-  // Close menu when clicking outside
+  // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
         setMobileMenuOpen(false)
       }
     }
-
-    if (mobileMenuOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
+    document.addEventListener('mousedown', handleClickOutside)
     return () => {
       document.removeEventListener('mousedown', handleClickOutside)
     }
-  }, [mobileMenuOpen])
+  }, [])
 
   const features = [
     {
@@ -73,16 +65,6 @@ export default function LandingPage() {
       icon: Users,
       title: 'Team Collaboration',
       description: 'Work together with approval workflows and role management'
-    },
-    {
-      icon: ImageIcon,
-      title: 'Media Library',
-      description: 'Organize and manage all your media assets efficiently'
-    },
-    {
-      icon: Workflow,
-      title: 'Automation',
-      description: 'Streamline your workflow with powerful automation tools'
     }
   ]
 
@@ -99,14 +81,11 @@ export default function LandingPage() {
     <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="border-b border-gray-200 bg-white/80 backdrop-blur-sm sticky top-0 z-50">
-        <div className="w-full pl-0 pr-[10px] sm:max-w-7xl sm:mx-auto sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-20 sm:h-24 lg:h-28">
-            <div className="flex items-center">
-              <Logo size="md" showText={true} className="sm:hidden" />
-              <Logo size="lg" showText={true} className="hidden sm:block" />
-            </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <Logo size="lg" showText={true} />
             
-            {/* Desktop buttons */}
+            {/* Desktop buttons - hidden on mobile */}
             <div className="hidden sm:flex items-center space-x-4">
               <Link href="/login">
                 <Button variant="ghost" className="text-gray-700 hover:text-gray-900">
@@ -127,24 +106,34 @@ export default function LandingPage() {
                 variant="ghost"
                 size="icon"
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="h-10 w-10"
               >
-                <Menu className="h-6 w-6" />
+                {mobileMenuOpen ? (
+                  <X className="h-6 w-6" />
+                ) : (
+                  <Menu className="h-6 w-6" />
+                )}
               </Button>
               
-              {/* Dropdown Menu */}
+              {/* Dropdown menu */}
               {mobileMenuOpen && (
-                <div className="absolute right-0 top-full mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden z-50">
-                  <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
-                    <button className="w-full text-left px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors">
+                <div className="absolute right-0 mt-2 w-48 rounded-lg shadow-lg bg-white ring-1 ring-black ring-opacity-5 overflow-hidden z-50">
+                  <div className="py-1">
+                    <Link 
+                      href="/login" 
+                      className="block px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
                       Sign In
-                    </button>
-                  </Link>
-                  <Link href="/signup" onClick={() => setMobileMenuOpen(false)}>
-                    <button className="w-full text-left px-4 py-3 text-sm bg-emerald-600 text-white hover:bg-emerald-700 transition-colors flex items-center justify-between">
-                      Get Started
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </Link>
+                    </Link>
+                    <Link 
+                      href="/signup" 
+                      className="block px-4 py-3 text-sm font-medium text-emerald-600 hover:bg-emerald-50 transition-colors"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Get Started →
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
@@ -155,10 +144,10 @@ export default function LandingPage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-emerald-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-24 lg:py-32">
-      <div className="text-center">
+          <div className="text-center animate-fade-in-up">
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 mb-6">
               Manage Your Social Media
-              <span className="block text-emerald-600">Like a Pro</span>
+              <span className="block text-emerald-600 mt-2">Like a Pro</span>
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
               All-in-one social media management platform with AI-powered tools, 
@@ -167,13 +156,13 @@ export default function LandingPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/signup">
-                <Button size="lg" className="bg-emerald-600 hover:bg-emerald-700 text-lg px-8 py-6">
+                <Button size="lg" className="w-full sm:w-auto bg-emerald-600 hover:bg-emerald-700 text-lg px-8 py-6">
                   Start Free Trial
                   <ArrowRight className="ml-2 h-5 w-5" />
                 </Button>
               </Link>
               <Link href="/login">
-                <Button size="lg" variant="outline" className="text-lg px-8 py-6">
+                <Button size="lg" variant="outline" className="w-full sm:w-auto text-lg px-8 py-6">
                   Sign In
                 </Button>
               </Link>
@@ -194,11 +183,11 @@ export default function LandingPage() {
               Powerful features designed to help you manage, grow, and analyze your social media presence
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div
                 key={index}
-                className="p-6 rounded-xl border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all bg-white"
+                className="p-6 rounded-xl border border-gray-200 hover:border-emerald-300 hover:shadow-lg transition-all duration-300 bg-white hover:-translate-y-1"
               >
                 <div className="w-12 h-12 rounded-lg bg-emerald-100 flex items-center justify-center mb-4">
                   <feature.icon className="h-6 w-6 text-emerald-600" />
@@ -206,7 +195,7 @@ export default function LandingPage() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 text-sm">
+                <p className="text-gray-600">
                   {feature.description}
                 </p>
               </div>
@@ -301,13 +290,13 @@ export default function LandingPage() {
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Link href="/signup">
-              <Button size="lg" className="bg-white text-emerald-600 hover:bg-gray-100 text-lg px-8 py-6">
+              <Button size="lg" className="w-full sm:w-auto bg-white text-emerald-600 hover:bg-gray-100 text-lg px-8 py-6">
                 Start Free Trial
                 <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </Link>
             <Link href="/login">
-              <Button size="lg" variant="outline" className="border-white text-white hover:bg-emerald-700 text-lg px-8 py-6">
+              <Button size="lg" variant="outline" className="w-full sm:w-auto border-white text-white hover:bg-emerald-700 text-lg px-8 py-6">
                 Sign In
               </Button>
             </Link>
@@ -328,35 +317,35 @@ export default function LandingPage() {
             <div>
               <h3 className="text-white font-semibold mb-4">Product</h3>
               <ul className="space-y-2 text-sm">
-                <li><Link href="/dashboard" className="hover:text-white">Dashboard</Link></li>
-                <li><Link href="/analytics" className="hover:text-white">Analytics</Link></li>
-                <li><Link href="/calendar" className="hover:text-white">Calendar</Link></li>
-                <li><Link href="/ai" className="hover:text-white">AI Tools</Link></li>
+                <li><Link href="/dashboard" className="hover:text-white transition-colors">Dashboard</Link></li>
+                <li><Link href="/analytics" className="hover:text-white transition-colors">Analytics</Link></li>
+                <li><Link href="/calendar" className="hover:text-white transition-colors">Calendar</Link></li>
+                <li><Link href="/ai" className="hover:text-white transition-colors">AI Tools</Link></li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-4">Company</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Blog</a></li>
-                <li><a href="#" className="hover:text-white">Careers</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
               </ul>
             </div>
             <div>
               <h3 className="text-white font-semibold mb-4">Resources</h3>
               <ul className="space-y-2 text-sm">
-                <li><a href="#" className="hover:text-white">Documentation</a></li>
-                <li><a href="#" className="hover:text-white">Support</a></li>
-                <li><a href="#" className="hover:text-white">API</a></li>
-                <li><a href="#" className="hover:text-white">Integrations</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Support</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Integrations</a></li>
               </ul>
             </div>
           </div>
           <div className="border-t border-gray-800 mt-8 pt-8 text-center text-sm">
             <p>&copy; {new Date().getFullYear()} You Fit Run Am. All rights reserved.</p>
           </div>
-      </div>
+        </div>
       </footer>
     </div>
   )

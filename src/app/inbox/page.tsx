@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton'
 import { MessageSquare, Reply, Archive, User, Send, Loader2, Search, Filter } from 'lucide-react'
 
 interface Message {
@@ -285,12 +286,20 @@ export default function InboxPage() {
                     Reply
                   </label>
                   <div className="space-y-3">
-                    <textarea
-                      value={replyContent}
-                      onChange={(e) => setReplyContent(e.target.value)}
-                      placeholder="Type your reply..."
-                      className="w-full h-24 p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                    />
+                    <div className="relative">
+                      <textarea
+                        value={replyContent}
+                        onChange={(e) => setReplyContent(e.target.value)}
+                        placeholder="Type your reply or use voice input..."
+                        className="w-full h-24 p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                      />
+                      <div className="absolute bottom-3 right-3">
+                        <VoiceInputButton
+                          onTranscript={(text) => setReplyContent((prev) => prev ? `${prev} ${text}` : text)}
+                          size="md"
+                        />
+                      </div>
+                    </div>
                     <div className="flex items-center justify-between">
                       <Button variant="outline" size="sm">
                         AI Suggestions

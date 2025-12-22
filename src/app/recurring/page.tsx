@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton'
 import { Plus, Repeat, Calendar, Clock, Edit, Trash2, Play, Pause } from 'lucide-react'
 
 interface RecurringPost {
@@ -24,6 +25,8 @@ interface RecurringPost {
 
 export default function RecurringPage() {
   const [showBuilder, setShowBuilder] = useState(false)
+  const [postTitle, setPostTitle] = useState('')
+  const [postContent, setPostContent] = useState('')
   const [recurringPosts, setRecurringPosts] = useState<RecurringPost[]>([
     {
       id: '1',
@@ -269,18 +272,38 @@ export default function RecurringPage() {
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Post Title</label>
-                <input
-                  type="text"
-                  placeholder="Give your recurring post a name..."
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                />
+                <div className="relative">
+                  <input
+                    type="text"
+                    value={postTitle}
+                    onChange={(e) => setPostTitle(e.target.value)}
+                    placeholder="Give your recurring post a name or speak..."
+                    className="w-full p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                  />
+                  <div className="absolute right-2 top-1/2 -translate-y-1/2">
+                    <VoiceInputButton
+                      onTranscript={(text) => setPostTitle((prev) => prev ? `${prev} ${text}` : text)}
+                      size="sm"
+                    />
+                  </div>
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Content</label>
-                <textarea
-                  placeholder="Write your post content..."
-                  className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-                />
+                <div className="relative">
+                  <textarea
+                    value={postContent}
+                    onChange={(e) => setPostContent(e.target.value)}
+                    placeholder="Write your post content or speak..."
+                    className="w-full h-32 p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                  />
+                  <div className="absolute bottom-3 right-3">
+                    <VoiceInputButton
+                      onTranscript={(text) => setPostContent((prev) => prev ? `${prev} ${text}` : text)}
+                      size="md"
+                    />
+                  </div>
+                </div>
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>

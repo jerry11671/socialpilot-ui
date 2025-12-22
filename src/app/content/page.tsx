@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Plus, Calendar, FileText, Sparkles, Image as ImageIcon } from 'lucide-react'
+import { VoiceInputButton } from '@/components/ui/VoiceInputButton'
+import { Plus, Calendar, FileText, Sparkles, Image as ImageIcon, Mic } from 'lucide-react'
 
 export default function ContentPage() {
   const [showAICaption, setShowAICaption] = useState(false)
@@ -64,12 +65,20 @@ export default function ContentPage() {
               <label className="block text-sm font-medium text-gray-700 mb-1.5 sm:mb-2">
                 Content
               </label>
-              <textarea
-                value={content}
-                onChange={(e) => setContent(e.target.value)}
-                placeholder="What's on your mind?"
-                className="w-full h-32 p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
-              />
+              <div className="relative">
+                <textarea
+                  value={content}
+                  onChange={(e) => setContent(e.target.value)}
+                  placeholder="What's on your mind? Click the mic to use voice input..."
+                  className="w-full h-32 p-3 pr-12 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 resize-none"
+                />
+                <div className="absolute bottom-3 right-3">
+                  <VoiceInputButton
+                    onTranscript={(text) => setContent((prev) => prev ? `${prev} ${text}` : text)}
+                    size="md"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className="flex flex-wrap items-center gap-2">
