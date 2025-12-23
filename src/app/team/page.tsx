@@ -74,7 +74,7 @@ export default function TeamPage() {
       ])
 
       if (membersResult.success && membersResult.data) {
-        setTeamMembers(membersResult.data)
+        setTeamMembers(membersResult.data.members)
         
         // Determine current user's role from the members list
         // Find the current user in the team members list
@@ -83,7 +83,7 @@ export default function TeamPage() {
           : null
         
         if (currentUserEmail) {
-          const currentUserMember = membersResult.data.find(
+          const currentUserMember = membersResult.data.members.find(
             (member: TeamMember) => member.email === currentUserEmail
           )
           if (currentUserMember) {
@@ -124,8 +124,7 @@ export default function TeamPage() {
       const result = await inviteTeamMember({
         email: inviteForm.email,
         role: inviteForm.role,
-        organization_id: currentOrgId,
-      })
+      }, currentOrgId)
 
       if (result.success) {
         setShowInviteModal(false)
@@ -394,7 +393,7 @@ export default function TeamPage() {
                     <div>
                       <p className="font-medium text-gray-900">{invitation.email}</p>
                       <p className="text-sm text-gray-500">
-                        Invited {invitation.invited_at || invitation.invitedAt ? new Date(invitation.invited_at || invitation.invitedAt).toLocaleDateString() : 'Recently'}
+                        Invited {invitation.invited_at || invitation.invitedAt ? new Date(invitation.invited_at || invitation.invitedAt!).toLocaleDateString() : 'Recently'}
                       </p>
                     </div>
                   </div>

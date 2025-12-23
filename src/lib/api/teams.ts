@@ -15,7 +15,7 @@ const getAuthHeaders = (): HeadersInit => {
 }
 
 // Get current organization ID
-const getCurrentOrgId = (): string | null => {
+export const getCurrentOrgId = (): string | null => {
   if (typeof window === 'undefined') return null
   return localStorage.getItem('current_org_id')
 }
@@ -99,9 +99,18 @@ export interface ApiResponse<T> {
 // ============================================
 
 // Get pending invitations
-export async function getPendingInvitations(organizationId?: string): Promise<ApiResponse<TeamInvitation[]>> {
+export async function getPendingInvitations(params?: { organization_id?: string } | string): Promise<ApiResponse<TeamInvitation[]>> {
   try {
-    const orgId = organizationId || getCurrentOrgId()
+    let orgId: string | null = null
+    
+    if (typeof params === 'string') {
+      orgId = params
+    } else if (params && typeof params === 'object') {
+      orgId = params.organization_id || getCurrentOrgId()
+    } else {
+      orgId = getCurrentOrgId()
+    }
+    
     const queryParams = orgId ? `?organization_id=${orgId}` : ''
     
     const response = await fetch(`${API_BASE_URL}/teams/invitations${queryParams}`, {
