@@ -66,7 +66,7 @@ export interface CreateOrganizationData {
   description?: string
   website?: string
   industry?: string
-  size?: string
+  size?: "1-10" | "11-50" | "51-200" | "201-500" | "501-1000" | "1000+"
   timezone?: string
   language?: string
 }
@@ -76,7 +76,7 @@ export interface UpdateOrganizationData {
   description?: string
   website?: string
   industry?: string
-  size?: string
+  size?: "1-10" | "11-50" | "51-200" | "201-500" | "501-1000" | "1000+"
   logo?: string
   timezone?: string
   language?: string

@@ -82,19 +82,19 @@ export default function LoginPage() {
         if (typeof window !== 'undefined') {
           window.localStorage.setItem('yf_auth', 'true')
           
-          // Store access token if provided
-          if (result?.access_token || result?.token) {
-            window.localStorage.setItem('access_token', result.access_token || result.token)
+          // Store access token from result.data.token
+          if (result?.data?.token) {
+            window.localStorage.setItem('access_token', result.data.token)
           }
           
-          // Store refresh token if provided
-          if (result?.refresh_token) {
-            window.localStorage.setItem('refresh_token', result.refresh_token)
-          }
-
-          // Store user data if provided
-          if (result?.user) {
-            window.localStorage.setItem('user', JSON.stringify(result.user))
+          // Store user data from result.data.user
+          if (result?.data?.user) {
+            window.localStorage.setItem('user', JSON.stringify(result.data.user))
+            
+            // Store current organization ID if available
+            if (result.data.user.current_organization_id) {
+              window.localStorage.setItem('current_org_id', result.data.user.current_organization_id)
+            }
           }
         }
 
@@ -146,12 +146,16 @@ export default function LoginPage() {
       console.log('Authentication successful!')
       if (typeof window !== 'undefined') {
         window.localStorage.setItem('yf_auth', 'true')
-        // Store any tokens from the backend response if provided
-        if (result?.access_token) {
-          window.localStorage.setItem('access_token', result.access_token)
+        // Store tokens from the backend response if provided
+        if (result?.data?.token) {
+          window.localStorage.setItem('access_token', result.data.token)
         }
-        if (result?.refresh_token) {
-          window.localStorage.setItem('refresh_token', result.refresh_token)
+        if (result?.data?.user) {
+          window.localStorage.setItem('user', JSON.stringify(result.data.user))
+          // Store current organization ID if available
+          if (result.data.user.current_organization_id) {
+            window.localStorage.setItem('current_org_id', result.data.user.current_organization_id)
+          }
         }
       }
       

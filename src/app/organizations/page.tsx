@@ -78,7 +78,7 @@ export default function OrganizationsPage() {
     description: '',
     website: '',
     industry: '',
-    size: '',
+    size: '' as "" | "1-10" | "11-50" | "51-200" | "201-500" | "501-1000" | "1000+",
     timezone: 'UTC',
     language: 'English',
     logo: '',
@@ -173,13 +173,22 @@ export default function OrganizationsPage() {
     if (!formData.name.trim()) return
 
     setIsSubmitting(true)
-    const result = await createOrganization(formData)
+    const createData = {
+      name: formData.name,
+      description: formData.description,
+      website: formData.website,
+      industry: formData.industry,
+      size: formData.size || undefined,
+      timezone: formData.timezone,
+      language: formData.language
+    }
+    const result = await createOrganization(createData)
     
     if (result.success && result.data) {
       setOrganizations(prev => [...prev, result.data!])
       setSelectedOrg(result.data)
       setShowCreateModal(false)
-      setFormData({ name: '', description: '', website: '', industry: '', size: '', timezone: 'UTC', language: 'English', logo: '', brand_voice: '', brand_guidelines: '', primary_color: '#106B81', secondary_color: '#059669' })
+      setFormData({ name: '', description: '', website: '', industry: '', size: '' as const, timezone: 'UTC', language: 'English', logo: '', brand_voice: '', brand_guidelines: '', primary_color: '#106B81', secondary_color: '#059669' })
     } else {
       setError(result.error || 'Failed to create organization')
     }
@@ -191,7 +200,11 @@ export default function OrganizationsPage() {
     if (!selectedOrg || !formData.name.trim()) return
 
     setIsSubmitting(true)
-    const result = await updateOrganization(selectedOrg.id, formData)
+    const updateData = {
+      ...formData,
+      size: formData.size || undefined
+    }
+    const result = await updateOrganization(selectedOrg.id, updateData)
     
     if (result.success && result.data) {
       setOrganizations(prev => prev.map(o => o.id === selectedOrg.id ? result.data! : o))
@@ -500,7 +513,7 @@ export default function OrganizationsPage() {
         description: selectedOrg.description || '',
         website: selectedOrg.website || '',
         industry: selectedOrg.industry || '',
-        size: selectedOrg.size || '',
+        size: (selectedOrg.size || '') as "" | "1-10" | "11-50" | "51-200" | "201-500" | "501-1000" | "1000+",
         timezone: selectedOrg.timezone || 'UTC',
         language: selectedOrg.language || 'English',
         logo: selectedOrg.logo || '',
@@ -550,7 +563,7 @@ export default function OrganizationsPage() {
         <Button
           className="bg-emerald-600 hover:bg-emerald-700"
           onClick={() => {
-            setFormData({ name: '', description: '', website: '', industry: '', size: '', timezone: 'UTC', language: 'English', logo: '', brand_voice: '', brand_guidelines: '', primary_color: '#106B81', secondary_color: '#059669' })
+            setFormData({ name: '', description: '', website: '', industry: '', size: '' as const, timezone: 'UTC', language: 'English', logo: '', brand_voice: '', brand_guidelines: '', primary_color: '#106B81', secondary_color: '#059669' })
             setShowCreateModal(true)
           }}
         >
@@ -877,7 +890,7 @@ export default function OrganizationsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Company Size</label>
                 <select
                   value={formData.size}
-                  onChange={(e) => setFormData(prev => ({ ...prev, size: e.target.value }))}
+                  onChange={(e) => setFormData(prev => ({ ...prev, size: e.target.value as "" | "1-10" | "11-50" | "51-200" | "201-500" | "501-1000" | "1000+" }))}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none"
                 >
                   <option value="">Select size</option>
