@@ -89,7 +89,7 @@ export default function OrganizationsPage() {
   })
   const [inviteData, setInviteData] = useState({
     email: '',
-    role: 'member' as 'admin' | 'member' | 'viewer',
+    role: 'member',
     message: '',
   })
   const [ssoData, setSSOData] = useState({
@@ -173,14 +173,17 @@ export default function OrganizationsPage() {
     if (!formData.name.trim()) return
 
     setIsSubmitting(true)
-    const createData = {
+    const createData: any = {
       name: formData.name,
       description: formData.description,
-      website: formData.website,
       industry: formData.industry,
       size: formData.size || undefined,
       timezone: formData.timezone,
       language: formData.language
+    }
+    // Only include website if it has a value
+    if (formData.website.trim()) {
+      createData.website = formData.website.trim()
     }
     const result = await createOrganization(createData)
     
@@ -857,9 +860,11 @@ export default function OrganizationsPage() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Website</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Website <span className="text-gray-400 text-xs font-normal">(optional)</span>
+                  </label>
                   <input
-                    type="url"
+                    type="text"
                     value={formData.website}
                     onChange={(e) => setFormData(prev => ({ ...prev, website: e.target.value }))}
                     placeholder="https://example.com"
@@ -1117,12 +1122,17 @@ export default function OrganizationsPage() {
                 <label className="block text-sm font-medium text-gray-700 mb-2">Role</label>
                 <select
                   value={inviteData.role}
-                  onChange={(e) => setInviteData(prev => ({ ...prev, role: e.target.value as any }))}
+                  onChange={(e) => setInviteData(prev => ({ ...prev, role: e.target.value }))}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none"
                 >
-                  <option value="viewer">Viewer - Can view content</option>
                   <option value="member">Member - Can create and edit</option>
                   <option value="admin">Admin - Full access</option>
+                  <option value="viewer">Viewer - Can view content</option>
+                  <option value="Content Manager">Content Manager</option>
+                  <option value="Social Media Responder">Social Media Responder</option>
+                  <option value="Social Media Manager">Social Media Manager</option>
+                  <option value="Content Creator">Content Creator</option>
+                  <option value="Analyst">Analyst</option>
                 </select>
               </div>
 

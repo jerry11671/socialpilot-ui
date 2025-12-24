@@ -93,7 +93,7 @@ export default function SignupPage() {
 
       const statusCode = result?.status_code ?? response.status
       const message =
-        result?.message || (response.ok ? 'Registration successful.' : 'Registration failed.')
+        result?.message || (response.ok ? 'Registration successful. Please check your email for the verification code.' : 'Registration failed.')
 
       if (!response.ok || statusCode >= 400) {
         setError(message)
@@ -101,37 +101,21 @@ export default function SignupPage() {
         return
       }
 
-      // Success - mark user as authenticated and store tokens if provided
+      // Store email for OTP verification
       if (typeof window !== 'undefined') {
-        window.localStorage.setItem('yf_auth', 'true')
+        window.localStorage.setItem('pending_registration_email', formData.email)
         
-        // Store access token if provided
+        // Store access token if provided (might be needed for OTP validation)
         if (result?.access_token || result?.token) {
           window.localStorage.setItem('access_token', result.access_token || result.token)
         }
-        
-        // Store refresh token if provided
-        if (result?.refresh_token) {
-          window.localStorage.setItem('refresh_token', result.refresh_token)
-        }
-
-        // Store user data if provided
-        if (result?.user) {
-          window.localStorage.setItem('user', JSON.stringify(result.user))
-        }
       }
 
-      setSuccess(message)
+      setSuccess('Registration successful! Please check your email for the verification code.')
 
-      // Redirect to dashboard if auto-login is enabled, otherwise go to login
+      // Redirect to OTP verification page
       setTimeout(() => {
-        if (result?.access_token || result?.token) {
-          // If we got a token, user is auto-logged in, go to dashboard
-          router.push('/dashboard')
-        } else {
-          // Otherwise, redirect to login page
-          router.push('/login')
-        }
+        router.push(`/verify-otp?email=${encodeURIComponent(formData.email)}`)
       }, 1500)
     } catch (err) {
       console.error('Registration error:', err)

@@ -84,6 +84,7 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
   const [error, setError] = useState<string | null>(null)
   
   const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const isAbortingRef = useRef(false) // Track if we're intentionally aborting
 
   // Check for browser support on mount
   useEffect(() => {
@@ -119,6 +120,12 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
         }
 
         recognitionRef.current.onerror = (event: SpeechRecognitionErrorEvent) => {
+          // Don't show error if we're intentionally aborting (cleanup)
+          if (isAbortingRef.current && event.error === 'aborted') {
+            setIsListening(false)
+            return
+          }
+
           let errorMessage = 'An error occurred during speech recognition'
           
           switch (event.error) {
@@ -135,7 +142,13 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
               errorMessage = 'Network error. Please check your connection.'
               break
             case 'aborted':
-              errorMessage = 'Speech recognition was aborted.'
+              // Only show aborted error if it wasn't intentional
+              if (!isAbortingRef.current) {
+                errorMessage = 'Speech recognition was interrupted. Please try again.'
+              } else {
+                setIsListening(false)
+                return
+              }
               break
             default:
               errorMessage = `Speech recognition error: ${event.error}`
@@ -151,38 +164,76 @@ export function useVoiceInput(options: UseVoiceInputOptions = {}): UseVoiceInput
 
         recognitionRef.current.onend = () => {
           setIsListening(false)
+          isAbortingRef.current = false // Reset abort flag
         }
 
         recognitionRef.current.onstart = () => {
           setIsListening(true)
           setError(null)
+          isAbortingRef.current = false
         }
       }
     }
 
     return () => {
-      if (recognitionRef.current) {
-        recognitionRef.current.abort()
+      if (recognitionRef.current && isListening) {
+        isAbortingRef.current = true // Mark as intentional abort
+        try {
+          recognitionRef.current.abort()
+        } catch (err) {
+          // Ignore errors during cleanup
+        }
       }
     }
-  }, [continuous, language, onResult, onError])
+  }, [continuous, language, onResult, onError, isListening])
 
   const startListening = useCallback(() => {
     if (recognitionRef.current && !isListening) {
       setTranscript('')
       setError(null)
+      isAbortingRef.current = false
       try {
         recognitionRef.current.start()
-      } catch (err) {
-        // Recognition might already be running
-        console.error('Failed to start recognition:', err)
+      } catch (err: any) {
+        // Recognition might already be running or in an invalid state
+        if (err?.message?.includes('already started') || err?.name === 'InvalidStateError') {
+          // Try to stop and restart
+          try {
+            recognitionRef.current.stop()
+            setTimeout(() => {
+              try {
+                recognitionRef.current?.start()
+              } catch (retryErr) {
+                console.error('Failed to restart recognition:', retryErr)
+                setError('Unable to start voice input. Please try again.')
+              }
+            }, 100)
+          } catch (stopErr) {
+            console.error('Failed to stop recognition:', stopErr)
+            setError('Voice input is already active.')
+          }
+        } else {
+          console.error('Failed to start recognition:', err)
+          setError('Unable to start voice input. Please check your microphone permissions.')
+        }
       }
     }
   }, [isListening])
 
   const stopListening = useCallback(() => {
     if (recognitionRef.current && isListening) {
-      recognitionRef.current.stop()
+      isAbortingRef.current = false // This is a normal stop, not an abort
+      try {
+        recognitionRef.current.stop()
+      } catch (err) {
+        // If stop fails, try abort
+        try {
+          isAbortingRef.current = true
+          recognitionRef.current.abort()
+        } catch (abortErr) {
+          console.error('Failed to stop/abort recognition:', abortErr)
+        }
+      }
     }
   }, [isListening])
 

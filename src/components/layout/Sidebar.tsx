@@ -1,10 +1,11 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { cn } from '@/lib/utils'
 import Logo from '@/components/Logo'
+import { getMe } from '@/lib/api/users'
 import {
   LayoutDashboard,
   FileText,
@@ -63,12 +64,85 @@ interface UserData {
 export default function Sidebar({ onNavigate }: SidebarProps) {
   const pathname = usePathname()
   const [currentUser, setCurrentUser] = useState<UserData>({
-    name: 'John Doe',
-    email: 'john@example.com',
+    name: null,
+    email: undefined,
     image: null,
-    first_name: 'John',
-    last_name: 'Doe',
+    first_name: undefined,
+    last_name: undefined,
   })
+  const [isLoadingUser, setIsLoadingUser] = useState(true)
+
+  // Fetch current user profile
+  const fetchUser = useCallback(async () => {
+    // Check if we have an access token before making the API call
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+    if (!accessToken) {
+      setIsLoadingUser(false)
+      // Try to load from localStorage as fallback
+      if (typeof window !== 'undefined') {
+        try {
+          const storedUserStr = localStorage.getItem('user')
+          if (storedUserStr) {
+            const storedUser = JSON.parse(storedUserStr)
+            setCurrentUser({
+              name: storedUser.name || `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || storedUser.email || null,
+              email: storedUser.email,
+              image: storedUser.image || null,
+              first_name: storedUser.first_name,
+              last_name: storedUser.last_name,
+            })
+          }
+        } catch (parseErr) {
+          console.error('Failed to parse stored user data:', parseErr)
+        }
+      }
+      return
+    }
+
+    setIsLoadingUser(true)
+    try {
+      const userData = await getMe()
+      const userInfo: UserData = {
+        name: userData.name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.email || null,
+        email: userData.email,
+        image: userData.image || null,
+        first_name: userData.first_name,
+        last_name: userData.last_name,
+      }
+      setCurrentUser(userInfo)
+      // Store user data in localStorage
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('user', JSON.stringify(userData))
+      }
+    } catch (err) {
+      console.error('Failed to fetch user profile:', err)
+      // On error, try to load from localStorage if available
+      if (typeof window !== 'undefined') {
+        try {
+          const storedUserStr = localStorage.getItem('user')
+          if (storedUserStr) {
+            const storedUser = JSON.parse(storedUserStr)
+            setCurrentUser({
+              name: storedUser.name || `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || storedUser.email || null,
+              email: storedUser.email,
+              image: storedUser.image || null,
+              first_name: storedUser.first_name,
+              last_name: storedUser.last_name,
+            })
+          }
+        } catch (parseErr) {
+          console.error('Failed to parse stored user data:', parseErr)
+        }
+      }
+    } finally {
+      setIsLoadingUser(false)
+    }
+  }, [])
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    fetchUser()
+  }, [fetchUser])
 
   const handleLinkClick = () => {
     if (onNavigate) {
@@ -147,12 +221,28 @@ export default function Sidebar({ onNavigate }: SidebarProps) {
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-medium text-gray-900 truncate">
-              {currentUser?.name || 'User'}
-            </p>
-            <p className="text-xs text-gray-500 truncate">
-              {currentUser?.email || 'Pro Plan'}
-            </p>
+            {isLoadingUser ? (
+              <>
+                <p className="text-sm font-medium text-gray-900 truncate animate-pulse">
+                  Loading...
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  &nbsp;
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium text-gray-900 truncate">
+                  {currentUser?.name || 
+                   (currentUser?.first_name && currentUser?.last_name 
+                     ? `${currentUser.first_name} ${currentUser.last_name}`
+                     : currentUser?.first_name || currentUser?.last_name || currentUser?.email || 'User')}
+                </p>
+                <p className="text-xs text-gray-500 truncate">
+                  {currentUser?.email || 'No email'}
+                </p>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -36,6 +36,12 @@ interface Organization {
   id: string
   name: string
   slug?: string
+  owner_id?: string
+  owner?: {
+    id: string
+    name?: string
+    email: string
+  }
 }
 
 export default function Header({ onMenuClick }: HeaderProps) {
@@ -44,30 +50,14 @@ export default function Header({ onMenuClick }: HeaderProps) {
   const [showNotifications, setShowNotifications] = useState(false)
   const [searchQuery, setSearchQuery] = useState('')
   const notificationRef = useRef<HTMLDivElement>(null)
-  // Initialize user state - try to load from localStorage first
-  const initializeUser = (): UserData => {
-    if (typeof window === 'undefined') {
-      return { name: null, email: undefined, image: null, first_name: undefined, last_name: undefined }
-    }
-    try {
-      const storedUser = localStorage.getItem('user')
-      if (storedUser) {
-        const userData = JSON.parse(storedUser)
-        return {
-          name: userData.name || `${userData.first_name || ''} ${userData.last_name || ''}`.trim() || userData.email || null,
-          email: userData.email,
-          image: userData.image || null,
-          first_name: userData.first_name,
-          last_name: userData.last_name,
-        }
-      }
-    } catch (err) {
-      console.error('Failed to parse stored user data:', err)
-    }
-    return { name: null, email: undefined, image: null, first_name: undefined, last_name: undefined }
-  }
-
-  const [currentUser, setCurrentUser] = useState<UserData>(initializeUser())
+  // Initialize user state - start empty, always fetch from API
+  const [currentUser, setCurrentUser] = useState<UserData>({
+    name: null,
+    email: undefined,
+    image: null,
+    first_name: undefined,
+    last_name: undefined,
+  })
   const [isLoadingUser, setIsLoadingUser] = useState(true)
   
   // Notifications state
@@ -261,7 +251,7 @@ export default function Header({ onMenuClick }: HeaderProps) {
     await deleteNotification(notificationId)
   }, [deleteNotification])
 
-  // Fetch organizations
+  // Fetch organizations (both created by user and where user is a member)
   const fetchOrganizations = useCallback(async () => {
     try {
       const response = await fetch(`${API_BASE_URL}/organizations`, {
@@ -273,15 +263,20 @@ export default function Header({ onMenuClick }: HeaderProps) {
       
       if (response.ok) {
         const orgList = result?.data || result?.organizations || result || []
-        setOrganizations(Array.isArray(orgList) ? orgList : [])
+        // Normalize organization IDs - handle both _id and id fields
+        const normalizedOrgs = (Array.isArray(orgList) ? orgList : []).map((org: any) => ({
+          ...org,
+          id: org.id || org._id || org.organization_id, // Support multiple ID field names
+        }))
+        setOrganizations(normalizedOrgs)
         
         // Get current org from localStorage or use first org
         const storedOrgId = typeof window !== 'undefined' ? localStorage.getItem('current_org_id') : null
-        if (storedOrgId && orgList.find((o: Organization) => o.id === storedOrgId)) {
+        if (storedOrgId && normalizedOrgs.find((o: Organization) => o.id === storedOrgId)) {
           setCurrentOrgId(storedOrgId)
-        } else if (orgList.length > 0) {
+        } else if (normalizedOrgs.length > 0) {
           // Set first organization as current if none is set
-          const firstOrgId = orgList[0].id
+          const firstOrgId = normalizedOrgs[0].id
           setCurrentOrgId(firstOrgId)
           if (typeof window !== 'undefined') {
             localStorage.setItem('current_org_id', firstOrgId)
@@ -294,29 +289,82 @@ export default function Header({ onMenuClick }: HeaderProps) {
   }, [getAuthHeaders])
 
   // Switch organization
-  const handleSwitchOrg = useCallback(async (orgId: string) => {
+  const handleSwitchOrg = useCallback(async (orgId: string, e?: React.MouseEvent) => {
+    // Prevent event propagation if event is provided
+    if (e) {
+      e.preventDefault()
+      e.stopPropagation()
+    }
+    
+    // Don't switch if already on this organization
+    if (currentOrgId === orgId) {
+      setShowOrgDropdown(false)
+      return
+    }
+
     try {
+      console.log('Switching to organization:', orgId)
       const response = await fetch(`${API_BASE_URL}/organizations/${orgId}/switch`, {
         method: 'POST',
         headers: getAuthHeaders(),
       })
 
+      const result = await response.json().catch(() => null)
+
       if (response.ok) {
+        console.log('Organization switched successfully:', result)
+        // Update current org ID
         setCurrentOrgId(orgId)
         if (typeof window !== 'undefined') {
           localStorage.setItem('current_org_id', orgId)
         }
+        
+        // Update organizations list with the returned organization data if available
+        if (result?.data) {
+          const orgData = result.data
+          // Normalize the ID field
+          const normalizedOrg = {
+            ...orgData,
+            id: orgData.id || orgData._id || orgId,
+          }
+          
+          setOrganizations(prev => {
+            const existingIndex = prev.findIndex(o => o.id === orgId)
+            if (existingIndex >= 0) {
+              // Update existing organization with new data
+              const updated = [...prev]
+              updated[existingIndex] = { ...updated[existingIndex], ...normalizedOrg }
+              return updated
+            } else {
+              // Add new organization if not in list
+              return [...prev, normalizedOrg]
+            }
+          })
+        }
+        
         setShowOrgDropdown(false)
-        // Optionally refresh the page or trigger data refresh
+        // Refresh the page to load new organization context
         window.location.reload()
+      } else {
+        const errorMsg = result?.message || result?.error || 'Unknown error'
+        console.error('Failed to switch organization:', errorMsg)
+        alert(`Failed to switch organization: ${errorMsg}`)
       }
     } catch (err) {
       console.error('Failed to switch organization:', err)
+      alert('Network error. Please try again.')
     }
-  }, [getAuthHeaders])
+  }, [getAuthHeaders, currentOrgId])
 
   // Fetch current user profile
   const fetchUser = useCallback(async () => {
+    // Check if we have an access token before making the API call
+    const accessToken = typeof window !== 'undefined' ? localStorage.getItem('access_token') : null
+    if (!accessToken) {
+      setIsLoadingUser(false)
+      return
+    }
+
     setIsLoadingUser(true)
     try {
       const userData = await getMe()
@@ -334,11 +382,26 @@ export default function Header({ onMenuClick }: HeaderProps) {
       }
     } catch (err) {
       console.error('Failed to fetch user profile:', err)
-      // On error, try to keep existing user data from localStorage
-      // If that fails, set empty values
-      const storedUser = initializeUser()
-      if (!storedUser.email) {
-        setCurrentUser({ name: null, email: undefined, image: null, first_name: undefined, last_name: undefined })
+      // On error, try to load from localStorage if available
+      if (typeof window !== 'undefined') {
+        try {
+          const storedUserStr = localStorage.getItem('user')
+          if (storedUserStr) {
+            const storedUser = JSON.parse(storedUserStr)
+            setCurrentUser({
+              name: storedUser.name || `${storedUser.first_name || ''} ${storedUser.last_name || ''}`.trim() || storedUser.email || null,
+              email: storedUser.email,
+              image: storedUser.image || null,
+              first_name: storedUser.first_name,
+              last_name: storedUser.last_name,
+            })
+          } else {
+            setCurrentUser({ name: null, email: undefined, image: null, first_name: undefined, last_name: undefined })
+          }
+        } catch (parseErr) {
+          console.error('Failed to parse stored user data:', parseErr)
+          setCurrentUser({ name: null, email: undefined, image: null, first_name: undefined, last_name: undefined })
+        }
       }
     } finally {
       setIsLoadingUser(false)
@@ -347,6 +410,29 @@ export default function Header({ onMenuClick }: HeaderProps) {
 
   // Get current organization name
   const currentOrg = organizations.find(o => o.id === currentOrgId)
+  
+  // Get current user ID to check if they created the organization
+  const getCurrentUserId = () => {
+    if (typeof window === 'undefined') return null
+    try {
+      const userStr = localStorage.getItem('user')
+      if (userStr) {
+        const user = JSON.parse(userStr)
+        return user.id || user.user_id
+      }
+    } catch (err) {
+      console.error('Failed to parse user data:', err)
+    }
+    return null
+  }
+  
+  const currentUserId = getCurrentUserId()
+  
+  // Check if user is the owner of an organization
+  const isOwner = (org: Organization) => {
+    if (!currentUserId) return false
+    return org.owner_id === currentUserId || org.owner?.id === currentUserId
+  }
 
   // Fetch all notifications when dropdown opens
   useEffect(() => {
@@ -364,6 +450,11 @@ export default function Header({ onMenuClick }: HeaderProps) {
     
     return () => clearInterval(interval)
   }, [fetchUnreadNotifications])
+
+  // Fetch user profile on mount
+  useEffect(() => {
+    fetchUser()
+  }, [fetchUser])
 
   // Fetch user profile on mount
   useEffect(() => {
@@ -504,25 +595,76 @@ export default function Header({ onMenuClick }: HeaderProps) {
                       No organizations found
                     </div>
                   ) : (
-                    organizations.map((org) => (
-                      <button
-                        key={org.id}
-                        onClick={() => handleSwitchOrg(org.id)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors ${
-                          currentOrgId === org.id ? 'bg-emerald-50' : ''
-                        }`}
-                      >
-                        <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
-                          <Building2 className="h-4 w-4 text-emerald-600" />
-                        </div>
-                        <span className="flex-1 truncate text-sm font-medium text-gray-900">
-                          {org.name}
-                        </span>
-                        {currentOrgId === org.id && (
-                          <Check className="h-4 w-4 text-emerald-600" />
-                        )}
-                      </button>
-                    ))
+                    <>
+                      {/* Organizations created by user */}
+                      {organizations.filter(org => isOwner(org)).length > 0 && (
+                        <>
+                          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                              My Organizations
+                            </p>
+                          </div>
+                          {organizations
+                            .filter(org => isOwner(org))
+                            .map((org) => (
+                              <button
+                                key={org.id}
+                                onClick={(e) => handleSwitchOrg(org.id, e)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors cursor-pointer ${
+                                  currentOrgId === org.id ? 'bg-emerald-50' : ''
+                                }`}
+                                type="button"
+                              >
+                                <div className="h-8 w-8 rounded-lg bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="h-4 w-4 text-emerald-600" />
+                                </div>
+                                <span className="flex-1 truncate text-sm font-medium text-gray-900">
+                                  {org.name}
+                                </span>
+                                {currentOrgId === org.id && (
+                                  <Check className="h-4 w-4 text-emerald-600" />
+                                )}
+                              </button>
+                            ))}
+                        </>
+                      )}
+                      
+                      {/* Organizations user is a member of (but didn't create) */}
+                      {organizations.filter(org => !isOwner(org)).length > 0 && (
+                        <>
+                          {organizations.filter(org => isOwner(org)).length > 0 && (
+                            <div className="border-t border-gray-100"></div>
+                          )}
+                          <div className="px-4 py-2 bg-gray-50 border-b border-gray-100">
+                            <p className="text-xs font-semibold text-gray-600 uppercase tracking-wide">
+                              Member Of
+                            </p>
+                          </div>
+                          {organizations
+                            .filter(org => !isOwner(org))
+                            .map((org) => (
+                              <button
+                                key={org.id}
+                                onClick={(e) => handleSwitchOrg(org.id, e)}
+                                className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-50 transition-colors cursor-pointer ${
+                                  currentOrgId === org.id ? 'bg-emerald-50' : ''
+                                }`}
+                                type="button"
+                              >
+                                <div className="h-8 w-8 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                                  <Building2 className="h-4 w-4 text-blue-600" />
+                                </div>
+                                <span className="flex-1 truncate text-sm font-medium text-gray-900">
+                                  {org.name}
+                                </span>
+                                {currentOrgId === org.id && (
+                                  <Check className="h-4 w-4 text-emerald-600" />
+                                )}
+                              </button>
+                            ))}
+                        </>
+                      )}
+                    </>
                   )}
                 </div>
                 <div className="p-2 border-t border-gray-100">

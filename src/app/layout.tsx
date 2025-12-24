@@ -22,7 +22,7 @@ export default function RootLayout({
   const router = useRouter()
 
   // Pages that are publicly accessible (no login required)
-  const publicPages = ['/', '/login', '/signup', '/forgot-password']
+  const publicPages = ['/', '/login', '/signup', '/forgot-password', '/verify-otp']
   const isPublicPage = publicPages.includes(pathname || '')
 
   // Simple client-side auth guard:
