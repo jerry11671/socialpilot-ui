@@ -162,3 +162,50 @@ export async function generateVideoScript(data: GenerateVideoScriptData): Promis
   }
 }
 
+// Content Ideas Generation Types
+export interface GenerateContentIdeasData {
+  industry: string
+  count: number
+  targetAudience: string
+  contentType: string
+}
+
+export interface ContentIdeasResponse {
+  ideas: string
+}
+
+/**
+ * Generate AI Content Ideas
+ * POST /ai/content-ideas
+ */
+export async function generateContentIdeas(data: GenerateContentIdeasData): Promise<ApiResponse<ContentIdeasResponse>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ai/content-ideas`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    })
+
+    const result = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: result?.message || result?.error || 'Failed to generate content ideas',
+      }
+    }
+
+    return {
+      success: true,
+      data: result?.data || result,
+      message: result?.message || 'Content ideas generated successfully',
+    }
+  } catch (err) {
+    console.error('Failed to generate content ideas:', err)
+    return {
+      success: false,
+      error: 'Network error. Please try again.',
+    }
+  }
+}
+
