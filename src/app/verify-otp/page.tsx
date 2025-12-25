@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -9,7 +9,7 @@ import Link from 'next/link'
 import Logo from '@/components/Logo'
 import { validateRegistrationToken } from '@/lib/api/auth'
 
-export default function VerifyOTPPage() {
+function VerifyOTPForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
@@ -144,6 +144,95 @@ export default function VerifyOTPPage() {
   }
 
   return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Enter verification code</CardTitle>
+        <CardDescription>
+          We've sent a 6-digit verification code to{' '}
+          <span className="font-medium text-gray-900">{identifier || 'your email'}</span>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        {error && (
+          <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
+            {error}
+          </div>
+        )}
+        {success && !error && (
+          <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
+            {success}
+          </div>
+        )}
+
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
+              Enter the 6-digit code
+            </label>
+            <div className="flex justify-center gap-2">
+              {otp.map((digit, index) => (
+                <input
+                  key={index}
+                  ref={(el) => { inputRefs.current[index] = el }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={(e) => handleOtpChange(index, e.target.value)}
+                  onKeyDown={(e) => handleKeyDown(index, e)}
+                  className="w-12 h-14 text-center text-2xl font-semibold border-2 border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
+                  disabled={isLoading}
+                />
+              ))}
+            </div>
+          </div>
+
+          <Button 
+            type="submit" 
+            className="w-full bg-emerald-600 hover:bg-emerald-700"
+            disabled={isLoading || otp.join('').length !== 6}
+          >
+            {isLoading ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Verifying...
+              </>
+            ) : (
+              'Verify Email'
+            )}
+          </Button>
+        </form>
+
+        <div className="text-center space-y-2">
+          <p className="text-sm text-gray-600">
+            Didn't receive the code?{' '}
+            <button
+              type="button"
+              onClick={() => {
+                // TODO: Implement resend OTP functionality
+                setError('Resend functionality coming soon. Please check your email.')
+              }}
+              className="text-emerald-600 hover:text-emerald-700 font-medium"
+            >
+              Resend code
+            </button>
+          </p>
+          
+          <Link 
+            href="/signup" 
+            className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Back to sign up
+          </Link>
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+export default function VerifyOTPPage() {
+  return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50 to-white p-6">
       <div className="w-full max-w-md">
         {/* Logo */}
@@ -154,94 +243,21 @@ export default function VerifyOTPPage() {
           <p className="text-gray-500 mt-2">Verify your email address</p>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle>Enter verification code</CardTitle>
-            <CardDescription>
-              We've sent a 6-digit verification code to{' '}
-              <span className="font-medium text-gray-900">{identifier || 'your email'}</span>
-            </CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {error && (
-              <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm">
-                {error}
-              </div>
-            )}
-            {success && !error && (
-              <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm">
-                {success}
-              </div>
-            )}
-
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-3 text-center">
-                  Enter the 6-digit code
-                </label>
-                <div className="flex justify-center gap-2">
-                  {otp.map((digit, index) => (
-                    <input
-                      key={index}
-                      ref={(el) => (inputRefs.current[index] = el)}
-                      type="text"
-                      inputMode="numeric"
-                      maxLength={1}
-                      value={digit}
-                      onChange={(e) => handleOtpChange(index, e.target.value)}
-                      onKeyDown={(e) => handleKeyDown(index, e)}
-                      className="w-12 h-14 text-center text-2xl font-semibold border-2 border-gray-300 rounded-lg focus:border-emerald-500 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 transition-colors"
-                      disabled={isLoading}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              <Button 
-                type="submit" 
-                className="w-full bg-emerald-600 hover:bg-emerald-700"
-                disabled={isLoading || otp.join('').length !== 6}
-              >
-                {isLoading ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Verifying...
-                  </>
-                ) : (
-                  'Verify Email'
-                )}
-              </Button>
-            </form>
-
-            <div className="text-center space-y-2">
-              <p className="text-sm text-gray-600">
-                Didn't receive the code?{' '}
-                <button
-                  type="button"
-                  onClick={() => {
-                    // TODO: Implement resend OTP functionality
-                    setError('Resend functionality coming soon. Please check your email.')
-                  }}
-                  className="text-emerald-600 hover:text-emerald-700 font-medium"
-                >
-                  Resend code
-                </button>
-              </p>
-              
-              <Link 
-                href="/signup" 
-                className="inline-flex items-center text-sm text-gray-600 hover:text-gray-900"
-              >
-                <ArrowLeft className="h-4 w-4 mr-1" />
-                Back to sign up
-              </Link>
-            </div>
-          </CardContent>
-        </Card>
+        <Suspense fallback={
+          <Card>
+            <CardContent className="p-8 text-center">
+              <Loader2 className="h-6 w-6 animate-spin mx-auto text-emerald-600" />
+              <p className="mt-4 text-gray-600">Loading...</p>
+            </CardContent>
+          </Card>
+        }>
+          <VerifyOTPForm />
+        </Suspense>
       </div>
     </div>
   )
 }
+
 
 
 
