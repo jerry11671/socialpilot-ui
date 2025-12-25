@@ -114,3 +114,51 @@ export async function generateHashtags(data: GenerateHashtagsData): Promise<ApiR
   }
 }
 
+// Video Script Generation Types
+export interface GenerateVideoScriptData {
+  topic: string
+  duration: string
+  style: string
+  platform: string
+  includeVisualCues: boolean
+}
+
+export interface VideoScriptResponse {
+  script: string
+}
+
+/**
+ * Generate AI Video Script
+ * POST /ai/video-script
+ */
+export async function generateVideoScript(data: GenerateVideoScriptData): Promise<ApiResponse<VideoScriptResponse>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ai/video-script`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    })
+
+    const result = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: result?.message || result?.error || 'Failed to generate video script',
+      }
+    }
+
+    return {
+      success: true,
+      data: result?.data || result,
+      message: result?.message || 'Video script generated successfully',
+    }
+  } catch (err) {
+    console.error('Failed to generate video script:', err)
+    return {
+      success: false,
+      error: 'Network error. Please try again.',
+    }
+  }
+}
+
