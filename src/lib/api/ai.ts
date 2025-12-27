@@ -209,3 +209,147 @@ export async function generateContentIdeas(data: GenerateContentIdeasData): Prom
   }
 }
 
+// Image Generation Types
+export interface GenerateImageData {
+  prompt: string
+  style?: string
+  size?: string
+  quality?: string
+}
+
+export interface ImageResponse {
+  image: {
+    url: string
+    revised_prompt: string
+  }
+}
+
+/**
+ * Generate AI Image
+ * POST /ai/image
+ */
+export async function generateImage(data: GenerateImageData): Promise<ApiResponse<ImageResponse>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ai/image`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    })
+
+    const result = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: result?.message || result?.error || 'Failed to generate image',
+      }
+    }
+
+    return {
+      success: true,
+      data: result?.data || result?.data,
+      message: result?.message || 'Image generated successfully',
+    }
+  } catch (err) {
+    console.error('Failed to generate image:', err)
+    return {
+      success: false,
+      error: 'Network error. Please try again.',
+    }
+  }
+}
+
+// CTA Generation Types
+export interface GenerateCTAData {
+  content: string
+  platform: string
+  count: number
+  goal: string
+}
+
+export interface CTAResponse {
+  ctas: string
+}
+
+/**
+ * Generate AI CTAs
+ * POST /ai/ctas
+ */
+export async function generateCTAs(data: GenerateCTAData): Promise<ApiResponse<CTAResponse>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ai/ctas`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    })
+
+    const result = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: result?.message || result?.error || 'Failed to generate CTAs',
+      }
+    }
+
+    return {
+      success: true,
+      data: result?.data || result,
+      message: result?.message || 'CTAs generated successfully',
+    }
+  } catch (err) {
+    console.error('Failed to generate CTAs:', err)
+    return {
+      success: false,
+      error: 'Network error. Please try again.',
+    }
+  }
+}
+
+// Content Variations Generation Types
+export interface GenerateVariationsData {
+  content: string
+  platform: string
+  count: number
+  variationTypes: string[]
+}
+
+export interface VariationsResponse {
+  variations: string
+}
+
+/**
+ * Generate AI Content Variations
+ * POST /ai/variations
+ */
+export async function generateVariations(data: GenerateVariationsData): Promise<ApiResponse<VariationsResponse>> {
+  try {
+    const response = await fetch(`${API_BASE_URL}/ai/variations`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(data),
+    })
+
+    const result = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      return {
+        success: false,
+        error: result?.message || result?.error || 'Failed to generate variations',
+      }
+    }
+
+    return {
+      success: true,
+      data: result?.data || result,
+      message: result?.message || 'Variations generated successfully',
+    }
+  } catch (err) {
+    console.error('Failed to generate variations:', err)
+    return {
+      success: false,
+      error: 'Network error. Please try again.',
+    }
+  }
+}
+
